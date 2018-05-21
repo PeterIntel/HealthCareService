@@ -1,0 +1,5659 @@
+{
+  "collection": {
+    "_": {
+      "postman_id": "3bd6389e-16fe-4ebd-81a9-509730912a96"
+    },
+    "item": [
+      {
+        "id": "2cf7511d-3a3f-40cf-8ba6-ef886d163485",
+        "name": "RegisterProCareAgent",
+        "description": {},
+        "item": [
+          {
+            "id": "f1fc1341-1bbc-4ab3-a617-d05550df3216",
+            "name": "Register agent",
+            "request": {
+              "url": {
+                "protocol": "https",
+                "path": [
+                  "bedagents"
+                ],
+                "host": [
+                  "{{host}}"
+                ],
+                "query": [
+                  {
+                    "key": "api-version",
+                    "value": "{{apiVersion}}"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "{{mediaType}}"
+                },
+                {
+                  "key": "{{authorization}}",
+                  "value": "{{authorizationHeaderToken}}"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\r\n  \"gatewayModel\": \"{{gatewayModel}}\",\r\n  \"gatewaySerial\": \"{{gatewaySerial}}\",\r\n  \"ipAddress\": \"{{ipAddress}}\",\r\n  \"softwareVersion\": \"{{softwareVersion}}\",\r\n  \"description\": \"{{description}}\",\r\n  \"totalDevices\": {{totalDevices}}\r\n}"
+              },
+              "auth": {
+                "type": "noauth",
+                "noauth": []
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "82702474-bdc9-43b4-bbff-7435e86f4184",
+                  "type": "text/javascript",
+                  "exec": [
+                    "let host = pm.environment.get(\"host\");",
+                    "let gatewaySerial = pm.environment.get(\"gatewaySerial\");",
+                    "",
+                    "let getRequest = {",
+                    "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + gatewaySerial + '?api-version=1.0',",
+                    "      method: 'GET',",
+                    "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                    "};",
+                    "",
+                    "let agentCredentialsSchema = {",
+                    "    \"required\": [\"serialNumber\", \"password\"],",
+                    "    \"properties\":{",
+                    "        \"serialNumber\":{",
+                    "            \"type\": \"string\"",
+                    "        },",
+                    "        \"password\": {",
+                    "            \"type\": \"string\"",
+                    "        }",
+                    "    }",
+                    "};",
+                    "    ",
+                    "if(data.testCase === \"agentFields\")",
+                    "{",
+                    "    pm.test(\"Added agent can't be added because of leak of required field\", function(){",
+                    "        pm.response.to.have.status(400);",
+                    "    })",
+                    "    ",
+                    "    if(gatewaySerial !== \"\")",
+                    "    {",
+                    "        pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+                    "              pm.sendRequest(getRequest, function (err, response) {",
+                    "                pm.expect(response.code).to.eql(404);",
+                    "            });  ",
+                    "        })",
+                    "    }",
+                    "}",
+                    "else if(data.testCase === \"disabledAccount\"){",
+                    "    pm.test(\"Agent can't be registered because of disabled account, status code is 401\", function(){",
+                    "    pm.response.to.have.status(401);",
+                    "    })",
+                    "",
+                    "    pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+                    "              pm.sendRequest(getRequest, function (err, response) {",
+                    "                pm.expect(response.code).to.eql(404);",
+                    "            });  ",
+                    "        })",
+                    "",
+                    "    pm.environment.unset(\"disabledUserName\");",
+                    "    pm.environment.unset(\"disabledUserPassword\");",
+                    "}",
+                    "else if(data.testCase === \"unsupportedTypes\"){",
+                    "    pm.test(\"Agent can't be registered because of unsupported media type, status code is 415\", function(){",
+                    "    pm.response.to.have.status(415);",
+                    "    })",
+                    "",
+                    "    pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+                    "        pm.sendRequest(getRequest, function (err, response) {",
+                    "            pm.expect(response.code).to.eql(404);",
+                    "        });  ",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"successRegister\" || data.testCase === \"registerWithExistingSerial\"){",
+                    "    if(data.testCase === \"successRegister\")",
+                    "    {",
+                    "        pm.test(\"Agent should be registered successfully, status code is 201\", function(){",
+                    "        pm.response.to.have.status(201);",
+                    "        })",
+                    "        ",
+                    "        pm.environment.set(\"successfullyAddedGateawaySerial\", pm.environment.get(\"gatewaySerial\"));",
+                    "    }",
+                    "    else if(data.testCase === \"registerWithExistingSerial\"){",
+                    "        pm.test(\"Agent should be registered successfully with existing the same gateawaySerial, status code is 201\", function(){",
+                    "        pm.response.to.have.status(201);",
+                    "        })",
+                    "          ",
+                    "        pm.globals.set(\"agentSerialNumber\", gatewaySerial);",
+                    "        pm.globals.set(\"agentPassword\", pm.response.json().password);",
+                    "        pm.environment.unset(\"successfullyAddedGateawaySerial\");  ",
+                    "    }",
+                    "    ",
+                    "    pm.test(\"Registered agent should be received and status code is 200\", function(){",
+                    "        pm.sendRequest(getRequest, function (err, response) {",
+                    "            pm.expect(response.code).to.eql(200);",
+                    "        });  ",
+                    "    })",
+                    "    ",
+                    "    pm.test(\"Body contains SerialNumber\", function () {",
+                    "        pm.expect(pm.response.text()).to.include(\"serialNumber\");",
+                    "    });",
+                    "",
+                    "    pm.test(\"Body contains Password\", function () {",
+                    "        pm.expect(pm.response.text()).to.include(\"password\");",
+                    "    });",
+                    "    ",
+                    "    pm.test(\"Response body matches the Agent credentils schema\", function () {",
+                    "        pm.expect(tv4.validate(pm.response.json(), agentCredentialsSchema)).to.be.true;",
+                    "    });",
+                    "}",
+                    "else if(data.testCase === \"agentWrongCreds\"){",
+                    "    ",
+                    "    pm.test(\"Do not register agent with wrong user creds\", function(){",
+                    "        pm.response.to.have.status(401);",
+                    "    })",
+                    "    ",
+                    "    pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+                    "          pm.sendRequest(getRequest, function (err, response) {",
+                    "            pm.expect(response.code).to.eql(404);",
+                    "        });  ",
+                    "    })",
+                    "}",
+                    "",
+                    "pm.environment.unset(\"userName\");",
+                    "pm.environment.unset(\"userPassword\");",
+                    "pm.environment.unset(\"gatewaySerial\")",
+                    "pm.environment.unset(\"authorization\");",
+                    "pm.environment.unset(\"authorizationHeaderToken\");"
+                  ]
+                }
+              },
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "5026d28b-aa0a-439f-adb0-e745dcb1a85b",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.globals.set(\"userName\", \"sem.account.admin014\");",
+                    "pm.globals.set(\"userPassword\", \"Password1!\");",
+                    "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                    "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                    "let isBasicAuth = true;",
+                    "",
+                    "if(data.testCase !== \"registerWithExistingSerial\")",
+                    "{",
+                    "    if(data.isGatewaySerial)",
+                    "    {",
+                    "        pm.environment.set(\"gatewaySerial\", globalFunctions.makeRandomInt());",
+                    "        // console.log(\"----\" + pm.variables.get(\"gatewaySerial\"));",
+                    "    }",
+                    "    else{",
+                    "        pm.environment.set(\"gatewaySerial\", \"\");",
+                    "    }",
+                    "}",
+                    "else{",
+                    "    pm.environment.set(\"gatewaySerial\", pm.environment.get(\"successfullyAddedGateawaySerial\"));",
+                    "}",
+                    "",
+                    "if(data.testCase === \"agentWrongCreds\"){",
+                    "    if(data.userName == null){",
+                    "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                    "    }",
+                    "    ",
+                    "    if(data.userPassword == null){",
+                    "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "",
+                    "    if(!data.isAuth){",
+                    "        isBasicAuth = false;",
+                    "    }",
+                    "}",
+                    "",
+                    "if(isBasicAuth)",
+                    "{",
+                    "    pm.environment.set(\"authorization\", \"Authorization\");",
+                    "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                    "}",
+                    "else{",
+                    "    pm.environment.set(\"authorization\", \"\");   ",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "7a44ae67-337a-4b6d-a46c-570c03e7949e",
+        "name": "UpdateProCareAgent",
+        "description": {},
+        "item": [
+          {
+            "id": "3bbb9d88-0abf-41d3-b622-ec3be86b8dfa",
+            "name": "Update agent",
+            "request": {
+              "url": {
+                "protocol": "https",
+                "path": [
+                  "bedagents",
+                  "{{agentSerialNumber}}"
+                ],
+                "host": [
+                  "{{host}}"
+                ],
+                "query": [
+                  {
+                    "key": "api-version",
+                    "value": "{{apiVersion}}"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "{{mediaType}}"
+                },
+                {
+                  "key": "{{authorization}}",
+                  "value": "{{authorizationHeaderToken}}"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\r\n  \"gatewayModel\": \"{{gatewayModel}}\",\r\n  \"gatewaySerial\": \"{{gatewaySerial}}\",\r\n  \"ipAddress\": \"{{ipAddress}}\",\r\n  \"softwareVersion\": \"{{softwareVersion}}\",\r\n  \"description\": \"{{description}}\",\r\n  \"totalDevices\": {{totalDevices}}\r\n}"
+              },
+              "auth": {
+                "type": "noauth",
+                "noauth": []
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "102e0087-9b03-44e8-9bc2-ea0b61fd10c4",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.environment.set(\"agentSerialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                    "pm.environment.set(\"agentPassword\", pm.globals.get(\"agentPassword\"));",
+                    "let isBasicAuth = true;",
+                    "",
+                    "if(data.isGatewaySerial)",
+                    "{",
+                    "    pm.environment.set(\"gatewaySerial\", pm.environment.get(\"agentSerialNumber\"));",
+                    "}",
+                    "else{",
+                    "    pm.environment.set(\"gatewaySerial\", \"\");",
+                    "}",
+                    "",
+                    "if(data.testCase === \"agentWrongCreds\"){",
+                    "    if(data.generateAgentSerialNumber){",
+                    "        pm.environment.set(\"agentSerialNumber\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "    ",
+                    "    if(data.generateAgentPassword){",
+                    "        pm.environment.set(\"agentPassword\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "",
+                    "    if(!data.isAuth){",
+                    "        isBasicAuth = false;",
+                    "    }",
+                    "}",
+                    "",
+                    "if(isBasicAuth)",
+                    "{",
+                    "    pm.environment.set(\"authorization\", \"Authorization\");",
+                    "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('agentSerialNumber'), pm.variables.get(\"agentPassword\")));",
+                    "}",
+                    "else{",
+                    "    pm.environment.set(\"authorization\", \"\");   ",
+                    "}"
+                  ]
+                }
+              },
+              {
+                "listen": "test",
+                "script": {
+                  "id": "c9ee503d-7821-432e-8a46-9364effb5276",
+                  "type": "text/javascript",
+                  "exec": [
+                    "if(data.testCase === \"agentFields\")",
+                    "{",
+                    "    pm.test(\"This agent can't be updated because of leak of required field\", function(){",
+                    "        pm.response.to.have.status(400);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"agentWrongCreds\"){",
+                    "    ",
+                    "    pm.test(\"Do not update agent with wrong agent creds\", function(){",
+                    "        pm.response.to.have.status(401);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"unsupportedTypes\"){",
+                    "        pm.test(\"Agent can't be updated because of unsupported media type, status code is 415\", function(){",
+                    "        pm.response.to.have.status(415);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"successUpdate\"){",
+                    "    pm.test(\"Agent should be registered successfully, status code is 200\", function(){",
+                    "        pm.response.to.have.status(200);",
+                    "    })",
+                    "}",
+                    "",
+                    "pm.environment.unset(\"authorization\");",
+                    "pm.environment.unset(\"authorizationHeaderToken\");",
+                    "pm.environment.unset(\"gatewaySerial\");"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "c42e22bd-0b10-43fe-824e-1d801fda5aa9",
+        "name": "UpdateBedStatus",
+        "description": {
+          "content": "",
+          "type": "text/plain"
+        },
+        "item": [
+          {
+            "id": "10d60198-0a48-4b07-bb2b-00bcd5809bd4",
+            "name": "Update bed",
+            "request": {
+              "url": {
+                "protocol": "https",
+                "path": [
+                  "beds",
+                  "{{badSerialNumber}}"
+                ],
+                "host": [
+                  "{{host}}"
+                ],
+                "query": [
+                  {
+                    "key": "api-version",
+                    "value": "{{apiVersion}}"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "{{mediaType}}"
+                },
+                {
+                  "key": "{{authorization}}",
+                  "value": "{{authorizationHeaderToken}}"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n\t\"model\": \"{{model}}\",\n\t\"serialNumber\": \"{{serialNumber}}\",\n\t\"online\": {{online}},\n\t\"connectionUptime\": {{connectionUptime}},\n\t\"ipAddress\": \"{{ipAddress}}\",\n\t\"rssi\": {{rssi}},\n\t\"location\": \"{{location}}\",\n\t\"macAddress\": \"{{macAddress}}\",\n\t\"networkAddress\": \"{{networkAddress}}\",\n\t\"softwareVersion\": \"{{softwareVersion}}\",\n\t\"activeDeviceError\": {{activeDeviceError}},\n\t\"activeDeviceErrorInformation\": \"{{activeDeviceErrorInformation}}\",\n\t\"deviceErrorLog1\": \"{{deviceErrorLog1}}\",\n\t\"deviceErrorLog2\": \"{{deviceErrorLog2}}\",\n\t\"deviceErrorLog3\": \"{{deviceErrorLog3}}\",\n\t\"deviceErrorLog4\": \"{{deviceErrorLog4}}\",\n\t\"deviceErrorLog5\": \"{{deviceErrorLog5}}\",\n\t\"deviceErrorLog6\": \"{{deviceErrorLog6}}\",\n\t\"deviceErrorLog7\": \"{{deviceErrorLog7}}\",\n\t\"deviceErrorLog8\": \"{{deviceErrorLog8}}\",\n\t\"deviceErrorLog9\": \"{{deviceErrorLog9}}\",\n\t\"deviceErrorLog10\": \"{{deviceErrorLog10}}\",\n\t\"patientPresent\": {{patientPresent}},\n\t\"bedExitAlarming\": {{bedExitAlarming}},\n\t\"bedExitArmed\": {{bedExitArmed}},\n\t\"brakeOn\": {{brakeOn}},\n\t\"flSiderailUp\": {{flSiderailUp}},\n\t\"frSiderailUp\": {{frSiderailUp}},\n\t\"hlSiderailUp\": {{hlSiderailUp}},\n\t\"hrSiderailUp\": {{hrSiderailUp}},\n\t\"lbsAlarming\": {{lbsAlarming}},\n\t\"lbsArmed\": {{lbsArmed}},\n\t\"lowBedHeight\": {{lowBedHeight}}\n}"
+              },
+              "auth": {
+                "type": "noauth",
+                "noauth": []
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "bcc41066-41f2-40dc-9787-f6958e928b29",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.environment.set(\"agentSerialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                    "pm.environment.set(\"agentPassword\", pm.globals.get(\"agentPassword\"));",
+                    "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                    "let isBasicAuth = true;",
+                    "",
+                    "if(pm.info.iteration === 1)",
+                    "{",
+                    "    pm.environment.set(\"badSerialNumber\", globalFunctions.makeRandomInt());",
+                    "}",
+                    "",
+                    "if(data.testCase === \"wrongBedFields\"){",
+                    "    if(data.isSerialNumber)",
+                    "    {",
+                    "        pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                    "    }",
+                    "    else{",
+                    "        pm.environment.set(\"serialNumber\", \"\");",
+                    "    }",
+                    "}",
+                    "else if(data.testCase === \"agentWrongCreds\"){",
+                    "    if(data.generateAgentSerialNumber){",
+                    "        pm.environment.set(\"agentSerialNumber\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "    ",
+                    "    if(data.generateAgentPassword){",
+                    "        pm.environment.set(\"agentPassword\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "    if(!data.isAuth){",
+                    "        isBasicAuth = false;",
+                    "    }",
+                    "}",
+                    "",
+                    "if(isBasicAuth)",
+                    "{",
+                    "    pm.environment.set(\"authorization\", \"Authorization\");",
+                    "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('agentSerialNumber'), pm.variables.get(\"agentPassword\")));",
+                    "}",
+                    "else{",
+                    "    pm.environment.set(\"authorization\", \"\");   ",
+                    "}"
+                  ]
+                }
+              },
+              {
+                "listen": "test",
+                "script": {
+                  "id": "e95ac9a9-81ca-4b36-8fe8-729fbe5d9d7d",
+                  "type": "text/javascript",
+                  "exec": [
+                    "if(data.testCase === \"wrongBedFields\"){",
+                    "    pm.test(\"Bed can't be updated because of leak of required field\", function(){",
+                    "        pm.response.to.have.status(400);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"agentWrongCreds\"){",
+                    "    ",
+                    "    pm.test(\"Bed can't be updated with wrong agent creds\", function(){",
+                    "        pm.response.to.have.status(401);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"unsupportedTypes\"){",
+                    "    pm.test(\"Bed can't be updated because of unsupported media type, status code is 415\", function(){",
+                    "        pm.response.to.have.status(415);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"successUpdate\"){",
+                    "    pm.test(\"Bed should be updated successfully, status code is 200\", function(){",
+                    "        pm.response.to.have.status(200);",
+                    "    })",
+                    "}",
+                    "",
+                    "pm.environment.unset(\"agentSerialNumber\");",
+                    "pm.environment.unset(\"agentPassword\");",
+                    "pm.environment.unset(\"authorization\");",
+                    "pm.environment.unset(\"authorizationHeaderToken\");"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "df718d87-799b-4df1-a528-2cbf03fd0b19",
+        "name": "DeleteProCareAgent",
+        "description": {
+          "content": "",
+          "type": "text/plain"
+        },
+        "item": [
+          {
+            "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+            "name": "Delete agent",
+            "request": {
+              "url": {
+                "protocol": "https",
+                "path": [
+                  "bedagents",
+                  "{{serialNumber}}"
+                ],
+                "host": [
+                  "{{host}}"
+                ],
+                "query": [
+                  {
+                    "key": "api-version",
+                    "value": "{{apiVersion}}"
+                  }
+                ],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "{{authorization}}",
+                  "value": "{{authorizationHeaderToken}}"
+                }
+              ],
+              "method": "DELETE",
+              "body": {
+                "mode": "raw",
+                "raw": ""
+              },
+              "auth": {
+                "type": "noauth",
+                "noauth": []
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                    "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                    "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                    "let isBasicAuth = true;",
+                    "",
+                    "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                    "    if(data.agentSerialNumberType === \"random\"){",
+                    "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "}",
+                    "else if(data.testCase === \"userWrongCreds\"){",
+                    "    if(data.userName == null){",
+                    "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                    "    }",
+                    "    ",
+                    "    if(data.userPassword == null){",
+                    "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                    "    }",
+                    "",
+                    "    if(!data.isAuth){",
+                    "        isBasicAuth = false;",
+                    "    }",
+                    "}",
+                    "",
+                    "if(isBasicAuth)",
+                    "{",
+                    "    pm.environment.set(\"authorization\", \"Authorization\");",
+                    "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                    "}",
+                    "else{",
+                    "    pm.environment.set(\"authorization\", \"\");   ",
+                    "}"
+                  ],
+                  "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+                }
+              },
+              {
+                "listen": "test",
+                "script": {
+                  "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                  "type": "text/javascript",
+                  "exec": [
+                    "let host = pm.environment.get(\"host\");",
+                    "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                    "",
+                    "let getRequest = {",
+                    "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                    "      method: 'GET',",
+                    "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                    "};",
+                    "",
+                    "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                    "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                    "        pm.response.to.have.status(404);",
+                    "    })",
+                    "    ",
+                    "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                    "        pm.sendRequest(getRequest, function (err, response) {",
+                    "            pm.expect(response.code).to.eql(404);",
+                    "        });  ",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"userWrongCreds\"){",
+                    "    ",
+                    "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                    "        pm.response.to.have.status(401);",
+                    "    })",
+                    "    ",
+                    "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                    "        pm.sendRequest(getRequest, function (err, response) {",
+                    "            pm.expect(response.code).to.eql(200);",
+                    "        });  ",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"disabledAccount\"){",
+                    "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                    "    pm.response.to.have.status(401);",
+                    "    })",
+                    "}",
+                    "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                    "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                    "        pm.response.to.have.status(204);",
+                    "    })",
+                    "    ",
+                    "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                    "        pm.sendRequest(getRequest, function (err, response) {",
+                    "            pm.expect(response.code).to.eql(404);",
+                    "        });  ",
+                    "    })",
+                    "}",
+                    "",
+                    "pm.environment.unset(\"userName\");",
+                    "pm.environment.unset(\"userPassword\");",
+                    "pm.environment.unset(\"serialNumber\");",
+                    "pm.environment.unset(\"rightAuthorization\");",
+                    "pm.environment.unset(\"authorization\");",
+                    "pm.environment.unset(\"authorizationHeaderToken\");",
+                    "pm.environment.unset(\"rightAuthorization\");",
+                    "pm.environment.unset(\"badSerialNumber\");"
+                  ],
+                  "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      }
+    ],
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "id": "b16d56fa-b16e-4ec8-8e56-2cafedc85e96",
+          "type": "text/javascript",
+          "exec": [
+            "var CryptoJS = require(\"crypto-js\");",
+            "",
+            "globalFunctions = {",
+            "    makeRandomString: function() {",
+            "      var text = \"\";",
+            "      var possible = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\";",
+            "    ",
+            "      for (var i = 0; i < 10; i++)",
+            "        text += possible.charAt(Math.floor(Math.random() * possible.length));",
+            "    ",
+            "      return text;",
+            "    },",
+            "    makeRandomInt:function() {",
+            "      var text = \"\";",
+            "      var possible = \"0123456789\";",
+            "    ",
+            "      for (var i = 0; i < 10; i++)",
+            "        text += possible.charAt(Math.floor(Math.random() * possible.length));",
+            "    ",
+            "      return text;",
+            "    },",
+            "    getAuthToken:function(userName, userPassword) {",
+            "      var rawStr = CryptoJS.enc.Utf8.parse(userName + \":\" + userPassword);",
+            "      var base64 = CryptoJS.enc.Base64.stringify(rawStr);",
+            "    ",
+            "      return base64;",
+            "    }",
+            "};",
+            "",
+            "pm.environment.set(\"rightAuthorization\", globalFunctions.getAuthToken(pm.globals.get('userName'), pm.globals.get(\"userPassword\")));"
+          ],
+          "_lastExecutionId": "627a1bf9-962c-40e9-a0fe-865ff2f57b44"
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "id": "d78e9c9b-15f9-4f6d-acd0-7feb7a5660cf",
+          "type": "text/javascript",
+          "exec": [
+            ""
+          ],
+          "_lastExecutionId": "661c73c8-ec46-46b5-bea2-52e11225bb73"
+        }
+      }
+    ],
+    "variable": [
+      {
+        "id": "b1160226-bcdf-4432-a3ed-2e7748257759",
+        "description": {
+          "content": "",
+          "type": "text/plain"
+        },
+        "type": "string",
+        "value": "1.0",
+        "key": "apiVersion"
+      }
+    ],
+    "info": {
+      "id": "3bd6389e-16fe-4ebd-81a9-509730912a96",
+      "name": "SmartBedAPIGateaway",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment",
+      "postman_exported_at": "2018-05-21T11:59:45.256Z",
+      "postman_exported_using": "Newman/3.9.3"
+    },
+    "id": "0548a04d-dce2-4720-a8ec-743f0cac5d07",
+    "name": "DevHealthcare",
+    "values": [
+      {
+        "type": "any",
+        "value": "api-procare-d1.physio-labs.com",
+        "key": "host"
+      }
+    ]
+  },
+  "globals": {
+    "_": {
+      "postman_variable_scope": "globals",
+      "postman_exported_at": "2018-05-21T11:59:45.256Z",
+      "postman_exported_using": "Newman/3.9.3"
+    },
+    "id": "90d847aa-a75b-406d-878f-fdf89b21222e",
+    "name": "My Workspace Globals",
+    "values": [
+      {
+        "type": "any",
+        "value": "sem.account.admin014",
+        "key": "userName"
+      },
+      {
+        "type": "any",
+        "value": "Password1!",
+        "key": "userPassword"
+      },
+      {
+        "type": "any",
+        "value": "7108632732",
+        "key": "agentSerialNumber"
+      },
+      {
+        "type": "any",
+        "value": "r0AX0Vmf7ka6ehX0u0Ijjg==",
+        "key": "agentPassword"
+      }
+    ]
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 28,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 13,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 13,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 14,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 14,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 317.5384615384615,
+      "started": 1526903987409,
+      "completed": 1526903992380
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 1,
+          "cycles": 7,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "1024295e-0df4-4676-b890-36ad652d63fe",
+          "httpRequestId": "f9a4eaf6-8c9d-440f-add0-67348fc27dc6",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "567b7642-43ad-4d0b-8d75-22b92c5d1322"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "9139401928"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "85e863b4-b6b9-443f-ad2a-6f00e5a29b83",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:48 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "ac3d4b36-fbb3-4dce-8734-2f9f9115e2e2"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 357,
+          "responseSize": 0
+        },
+        "id": "27307ee7-a3c4-49d9-a951-9661b548d98a",
+        "assertions": [
+          {
+            "assertion": "Agent can't be deleted because of wrong serial number and status code is 400"
+          },
+          {
+            "assertion": "Agent isn't gotten and status code is 404"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 1,
+          "cycles": 7,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "1024295e-0df4-4676-b890-36ad652d63fe",
+          "httpRequestId": "f9a4eaf6-8c9d-440f-add0-67348fc27dc6",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "567b7642-43ad-4d0b-8d75-22b92c5d1322"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "9139401928"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "85e863b4-b6b9-443f-ad2a-6f00e5a29b83",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:48 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "ac3d4b36-fbb3-4dce-8734-2f9f9115e2e2"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 357,
+          "responseSize": 0
+        },
+        "id": "27307ee7-a3c4-49d9-a951-9661b548d98a",
+        "assertions": [
+          {
+            "assertion": "Agent can't be deleted because of wrong serial number and status code is 400"
+          },
+          {
+            "assertion": "Agent isn't gotten and status code is 404"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "5eadaa7d-e765-4b53-84f4-35f246dcb4bc",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 1,
+          "cr": true,
+          "httpRequestId": "997dc488-5f34-4f21-93fb-37521e9d498e",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "2415f130-54c7-4fd7-be5d-22970529136e"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "45508b25-6794-4434-937b-6bbf38fd13ea",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:49 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "d8aa149f-1425-4869-891a-103e86e450f0"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 349,
+          "responseSize": 182
+        },
+        "id": "ded27274-8032-4510-9b8b-c9d92cad45f1",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "5eadaa7d-e765-4b53-84f4-35f246dcb4bc",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 1,
+          "cr": true,
+          "httpRequestId": "997dc488-5f34-4f21-93fb-37521e9d498e",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "2415f130-54c7-4fd7-be5d-22970529136e"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "45508b25-6794-4434-937b-6bbf38fd13ea",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:49 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "d8aa149f-1425-4869-891a-103e86e450f0"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 349,
+          "responseSize": 182
+        },
+        "id": "ded27274-8032-4510-9b8b-c9d92cad45f1",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "87017ab5-d403-4932-8f30-6ea2b4a6f8a9",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 2,
+          "cr": true,
+          "httpRequestId": "f5d4db0b-ac5d-4412-9d14-9632f27a81a6",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "cadfec80-d375-43eb-84a0-584fe29fa3cf"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "73947c61-bada-4d82-8d70-62c6005f8369",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:50 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "01f905c7-4217-43f8-9f52-7a307af63db6"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 221,
+          "responseSize": 182
+        },
+        "id": "9988dd23-0875-436c-8a0c-05b53e91f34f",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "87017ab5-d403-4932-8f30-6ea2b4a6f8a9",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 2,
+          "cr": true,
+          "httpRequestId": "f5d4db0b-ac5d-4412-9d14-9632f27a81a6",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "cadfec80-d375-43eb-84a0-584fe29fa3cf"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "73947c61-bada-4d82-8d70-62c6005f8369",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:50 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "01f905c7-4217-43f8-9f52-7a307af63db6"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 221,
+          "responseSize": 182
+        },
+        "id": "9988dd23-0875-436c-8a0c-05b53e91f34f",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "f1ece436-efec-447f-8871-09f02de0a022",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 3,
+          "cr": true,
+          "httpRequestId": "1cc1294a-373a-408e-94e8-be1fadea082f",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "bded42bb-e2bf-420f-99cd-0425a87ec6a6"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "51de34cc-cb6c-40aa-a8c8-aae1ec1124a4",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:50 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "27bea9b1-908b-41f7-a56d-0e82c99035d8"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 220,
+          "responseSize": 182
+        },
+        "id": "8dfc9d79-61e0-4dc2-b63f-edfa43a098f7",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "f1ece436-efec-447f-8871-09f02de0a022",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 3,
+          "cr": true,
+          "httpRequestId": "1cc1294a-373a-408e-94e8-be1fadea082f",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "bded42bb-e2bf-420f-99cd-0425a87ec6a6"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "51de34cc-cb6c-40aa-a8c8-aae1ec1124a4",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:50 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "27bea9b1-908b-41f7-a56d-0e82c99035d8"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 220,
+          "responseSize": 182
+        },
+        "id": "8dfc9d79-61e0-4dc2-b63f-edfa43a098f7",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "c4169252-b49e-4bb8-ab23-b5d863d36cd3",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 4,
+          "cr": true,
+          "httpRequestId": "bd20cee9-3633-417d-a360-32a5ac6fd5b5",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "6576aa74-68d8-45a2-bb32-10b55e6be905"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "53cf7c97-a7fa-489d-a765-9ff5d6145317",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:51 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "bdb971ee-683e-4a74-a792-7f686725dac9"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 215,
+          "responseSize": 182
+        },
+        "id": "a7b09fa6-28a9-4cb4-87c4-451e4513a3f5",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "c4169252-b49e-4bb8-ab23-b5d863d36cd3",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 4,
+          "cr": true,
+          "httpRequestId": "bd20cee9-3633-417d-a360-32a5ac6fd5b5",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "6576aa74-68d8-45a2-bb32-10b55e6be905"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "53cf7c97-a7fa-489d-a765-9ff5d6145317",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:51 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "bdb971ee-683e-4a74-a792-7f686725dac9"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              77,
+              111,
+              100,
+              101,
+              108,
+              34,
+              58,
+              34,
+              53,
+              50,
+              49,
+              50,
+              45,
+              53,
+              48,
+              48,
+              45,
+              48,
+              48,
+              53,
+              95,
+              49,
+              49,
+              49,
+              49,
+              49,
+              34,
+              44,
+              34,
+              103,
+              97,
+              116,
+              101,
+              119,
+              97,
+              121,
+              83,
+              101,
+              114,
+              105,
+              97,
+              108,
+              34,
+              58,
+              34,
+              55,
+              49,
+              48,
+              56,
+              54,
+              51,
+              50,
+              55,
+              51,
+              50,
+              34,
+              44,
+              34,
+              100,
+              101,
+              115,
+              99,
+              114,
+              105,
+              112,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              85,
+              110,
+              105,
+              118,
+              101,
+              114,
+              115,
+              105,
+              116,
+              121,
+              32,
+              111,
+              102,
+              32,
+              75,
+              101,
+              110,
+              116,
+              117,
+              99,
+              107,
+              121,
+              119,
+              34,
+              44,
+              34,
+              115,
+              111,
+              102,
+              116,
+              119,
+              97,
+              114,
+              101,
+              86,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              49,
+              46,
+              48,
+              46,
+              48,
+              46,
+              51,
+              34,
+              44,
+              34,
+              105,
+              112,
+              65,
+              100,
+              100,
+              114,
+              101,
+              115,
+              115,
+              34,
+              58,
+              34,
+              49,
+              55,
+              50,
+              46,
+              49,
+              53,
+              54,
+              46,
+              53,
+              48,
+              46,
+              54,
+              51,
+              34,
+              44,
+              34,
+              116,
+              111,
+              116,
+              97,
+              108,
+              68,
+              101,
+              118,
+              105,
+              99,
+              101,
+              115,
+              34,
+              58,
+              56,
+              48,
+              48,
+              49,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 215,
+          "responseSize": 182
+        },
+        "id": "a7b09fa6-28a9-4cb4-87c4-451e4513a3f5",
+        "assertions": [
+          {
+            "assertion": "Do not delete agent with wrong user creds"
+          },
+          {
+            "assertion": "Agent is gotten and status code is 200"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "d967e900-d75c-4392-9137-955120fb945b",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 5,
+          "cr": true,
+          "httpRequestId": "a6ef04c5-3825-4dda-bed9-5e090b3cfc17"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMzJkaXNhYmxlZDpEaXNAYmxlZDE="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            },
+            {
+              "key": "content-length",
+              "value": ""
+            }
+          ],
+          "method": "DELETE",
+          "body": {
+            "mode": "raw",
+            "raw": ""
+          },
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": {
+          "id": "70f8517e-b5b8-4752-b7cf-6a3bac48a186",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:51 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "4d1cded2-7d76-44bc-80af-e91ac6d16371"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 198,
+          "responseSize": 0
+        },
+        "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+        "assertions": [
+          {
+            "assertion": "Agent can't be deleted because of disabled account, status code is 401"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "c1c6ee68-6843-41b3-ae8b-4ba452357ef7",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 6,
+          "cr": true,
+          "httpRequestId": "ca33eec0-4724-4c1b-ac75-912235ecbcf7",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "eb5f348f-d186-472d-988e-2878311bfdb3"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "4218e88a-2426-42e4-a2de-99dd72225c20",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:52 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "0dacc666-4767-41ca-944b-06a8c475f914"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 228,
+          "responseSize": 0
+        },
+        "id": "c6820b49-c1a2-4496-99d6-a622370e1eac",
+        "assertions": [
+          {
+            "assertion": "Agent should be deleted successfully, status code is 204"
+          },
+          {
+            "assertion": "Agent isn't gotten and status code is 404"
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "c1c6ee68-6843-41b3-ae8b-4ba452357ef7",
+          "length": 1,
+          "cycles": 7,
+          "position": 0,
+          "iteration": 6,
+          "cr": true,
+          "httpRequestId": "ca33eec0-4724-4c1b-ac75-912235ecbcf7",
+          "scriptId": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+          "execution": "eb5f348f-d186-472d-988e-2878311bfdb3"
+        },
+        "item": {
+          "id": "b6d0c337-6471-469a-9fe6-2cb83d3e0346",
+          "name": "Delete agent",
+          "request": {
+            "url": {
+              "protocol": "https",
+              "path": [
+                "bedagents",
+                "{{serialNumber}}"
+              ],
+              "host": [
+                "{{host}}"
+              ],
+              "query": [
+                {
+                  "key": "api-version",
+                  "value": "{{apiVersion}}"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "{{authorization}}",
+                "value": "{{authorizationHeaderToken}}"
+              }
+            ],
+            "method": "DELETE",
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+                  "pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+                  "pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+                  "let isBasicAuth = true;",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    if(data.agentSerialNumberType === \"random\"){",
+                  "        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    if(data.userName == null){",
+                  "        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+                  "    }",
+                  "    ",
+                  "    if(data.userPassword == null){",
+                  "        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+                  "    }",
+                  "",
+                  "    if(!data.isAuth){",
+                  "        isBasicAuth = false;",
+                  "    }",
+                  "}",
+                  "",
+                  "if(isBasicAuth)",
+                  "{",
+                  "    pm.environment.set(\"authorization\", \"Authorization\");",
+                  "    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+                  "}",
+                  "else{",
+                  "    pm.environment.set(\"authorization\", \"\");   ",
+                  "}"
+                ],
+                "_lastExecutionId": "c8e09ecb-dddb-422a-94f1-5e423031e4e0"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+                "type": "text/javascript",
+                "exec": [
+                  "let host = pm.environment.get(\"host\");",
+                  "let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+                  "",
+                  "let getRequest = {",
+                  "      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+                  "      method: 'GET',",
+                  "      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+                  "};",
+                  "",
+                  "if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+                  "    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+                  "        pm.response.to.have.status(404);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"userWrongCreds\"){",
+                  "    ",
+                  "    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+                  "        pm.response.to.have.status(401);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent is gotten and status code is 200\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(200);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"disabledAccount\"){",
+                  "    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+                  "    pm.response.to.have.status(401);",
+                  "    })",
+                  "}",
+                  "else if(data.testCase === \"deleteAgentSuccessfully\"){",
+                  "    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+                  "        pm.response.to.have.status(204);",
+                  "    })",
+                  "    ",
+                  "    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+                  "        pm.sendRequest(getRequest, function (err, response) {",
+                  "            pm.expect(response.code).to.eql(404);",
+                  "        });  ",
+                  "    })",
+                  "}",
+                  "",
+                  "pm.environment.unset(\"userName\");",
+                  "pm.environment.unset(\"userPassword\");",
+                  "pm.environment.unset(\"serialNumber\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"authorization\");",
+                  "pm.environment.unset(\"authorizationHeaderToken\");",
+                  "pm.environment.unset(\"rightAuthorization\");",
+                  "pm.environment.unset(\"badSerialNumber\");"
+                ],
+                "_lastExecutionId": "eb5f348f-d186-472d-988e-2878311bfdb3"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "bedagents",
+              "7108632732"
+            ],
+            "host": [
+              "api-procare-d1",
+              "physio-labs",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "api-version",
+                "value": "1.0"
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Authorization",
+              "value": "Basic c2VtLmFjY291bnQuYWRtaW4wMTQ6UGFzc3dvcmQxIQ=="
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.1.3"
+            },
+            {
+              "key": "Accept",
+              "value": "*/*"
+            },
+            {
+              "key": "Host",
+              "value": "api-procare-d1.physio-labs.com"
+            },
+            {
+              "key": "accept-encoding",
+              "value": "gzip, deflate"
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "4218e88a-2426-42e4-a2de-99dd72225c20",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 21 May 2018 11:59:52 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "Kestrel"
+            },
+            {
+              "key": "X-Correlation-Id",
+              "value": "0dacc666-4767-41ca-944b-06a8c475f914"
+            },
+            {
+              "key": "X-Stryker-Service",
+              "value": "Stryker.ProCare.Gateway.SmartBedAgent/1.1.0.9532"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 228,
+          "responseSize": 0
+        },
+        "id": "c6820b49-c1a2-4496-99d6-a622370e1eac",
+        "assertions": [
+          {
+            "assertion": "Agent should be deleted successfully, status code is 204"
+          },
+          {
+            "assertion": "Agent isn't gotten and status code is 404"
+          }
+        ]
+      }
+    ],
+    "transfers": {
+      "responseTotal": 728
+    },
+    "failures": [],
+    "error": null
+  }
+}

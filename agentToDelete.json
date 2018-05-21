@@ -1,0 +1,38 @@
+[
+    {
+        "testCase": "deleteAgentWithWrongSerialNumber",
+        "agentSerialNumberType": "random"
+    },
+    {
+        "testCase": "userWrongCreds",
+        "userPassword": "Password1!",
+        "apiVersion": "1.0",
+        "isAuth": true
+    },
+    {
+        "testCase": "userWrongCreds",
+        "userName": "sem.account.admin014",
+        "apiVersion": "1.0",
+        "isAuth": true
+    },
+    {
+        "testCase": "userWrongCreds",
+        "userPassword": "",
+        "apiVersion": "1.0",
+        "isAuth": true
+    },
+    {
+        "testCase": "userWrongCreds",
+        "apiVersion": "1.0",
+        "isAuth": false
+    },
+    {
+        "testCase": "disabledAccount",
+        "userName": "sem.account.admin032disabled",
+        "userPassword": "Dis@bled1",
+        "apiVersion": "1.0"
+    },
+    {
+        "testCase": "deleteAgentSuccessfully"
+    }
+]

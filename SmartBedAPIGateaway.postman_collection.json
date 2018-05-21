@@ -1,0 +1,706 @@
+{
+	"info": {
+		"_postman_id": "3bd6389e-16fe-4ebd-81a9-509730912a96",
+		"name": "SmartBedAPIGateaway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "RegisterProCareAgent",
+			"description": null,
+			"item": [
+				{
+					"name": "Register agent",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "82702474-bdc9-43b4-bbff-7435e86f4184",
+								"type": "text/javascript",
+								"exec": [
+									"let host = pm.environment.get(\"host\");",
+									"let gatewaySerial = pm.environment.get(\"gatewaySerial\");",
+									"",
+									"let getRequest = {",
+									"      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + gatewaySerial + '?api-version=1.0',",
+									"      method: 'GET',",
+									"      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+									"};",
+									"",
+									"let agentCredentialsSchema = {",
+									"    \"required\": [\"serialNumber\", \"password\"],",
+									"    \"properties\":{",
+									"        \"serialNumber\":{",
+									"            \"type\": \"string\"",
+									"        },",
+									"        \"password\": {",
+									"            \"type\": \"string\"",
+									"        }",
+									"    }",
+									"};",
+									"    ",
+									"if(data.testCase === \"agentFields\")",
+									"{",
+									"    pm.test(\"Added agent can't be added because of leak of required field\", function(){",
+									"        pm.response.to.have.status(400);",
+									"    })",
+									"    ",
+									"    if(gatewaySerial !== \"\")",
+									"    {",
+									"        pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+									"              pm.sendRequest(getRequest, function (err, response) {",
+									"                pm.expect(response.code).to.eql(404);",
+									"            });  ",
+									"        })",
+									"    }",
+									"}",
+									"else if(data.testCase === \"disabledAccount\"){",
+									"    pm.test(\"Agent can't be registered because of disabled account, status code is 401\", function(){",
+									"    pm.response.to.have.status(401);",
+									"    })",
+									"",
+									"    pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+									"              pm.sendRequest(getRequest, function (err, response) {",
+									"                pm.expect(response.code).to.eql(404);",
+									"            });  ",
+									"        })",
+									"",
+									"    pm.environment.unset(\"disabledUserName\");",
+									"    pm.environment.unset(\"disabledUserPassword\");",
+									"}",
+									"else if(data.testCase === \"unsupportedTypes\"){",
+									"    pm.test(\"Agent can't be registered because of unsupported media type, status code is 415\", function(){",
+									"    pm.response.to.have.status(415);",
+									"    })",
+									"",
+									"    pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+									"        pm.sendRequest(getRequest, function (err, response) {",
+									"            pm.expect(response.code).to.eql(404);",
+									"        });  ",
+									"    })",
+									"}",
+									"else if(data.testCase === \"successRegister\" || data.testCase === \"registerWithExistingSerial\"){",
+									"    if(data.testCase === \"successRegister\")",
+									"    {",
+									"        pm.test(\"Agent should be registered successfully, status code is 201\", function(){",
+									"        pm.response.to.have.status(201);",
+									"        })",
+									"        ",
+									"        pm.environment.set(\"successfullyAddedGateawaySerial\", pm.environment.get(\"gatewaySerial\"));",
+									"    }",
+									"    else if(data.testCase === \"registerWithExistingSerial\"){",
+									"        pm.test(\"Agent should be registered successfully with existing the same gateawaySerial, status code is 201\", function(){",
+									"        pm.response.to.have.status(201);",
+									"        })",
+									"          ",
+									"        pm.globals.set(\"agentSerialNumber\", gatewaySerial);",
+									"        pm.globals.set(\"agentPassword\", pm.response.json().password);",
+									"        pm.environment.unset(\"successfullyAddedGateawaySerial\");  ",
+									"    }",
+									"    ",
+									"    pm.test(\"Registered agent should be received and status code is 200\", function(){",
+									"        pm.sendRequest(getRequest, function (err, response) {",
+									"            pm.expect(response.code).to.eql(200);",
+									"        });  ",
+									"    })",
+									"    ",
+									"    pm.test(\"Body contains SerialNumber\", function () {",
+									"        pm.expect(pm.response.text()).to.include(\"serialNumber\");",
+									"    });",
+									"",
+									"    pm.test(\"Body contains Password\", function () {",
+									"        pm.expect(pm.response.text()).to.include(\"password\");",
+									"    });",
+									"    ",
+									"    pm.test(\"Response body matches the Agent credentils schema\", function () {",
+									"        pm.expect(tv4.validate(pm.response.json(), agentCredentialsSchema)).to.be.true;",
+									"    });",
+									"}",
+									"else if(data.testCase === \"agentWrongCreds\"){",
+									"    ",
+									"    pm.test(\"Do not register agent with wrong user creds\", function(){",
+									"        pm.response.to.have.status(401);",
+									"    })",
+									"    ",
+									"    pm.test(\"Unregistered agent can't be received and status code is 404\", function(){",
+									"          pm.sendRequest(getRequest, function (err, response) {",
+									"            pm.expect(response.code).to.eql(404);",
+									"        });  ",
+									"    })",
+									"}",
+									"",
+									"pm.environment.unset(\"userName\");",
+									"pm.environment.unset(\"userPassword\");",
+									"pm.environment.unset(\"gatewaySerial\")",
+									"pm.environment.unset(\"authorization\");",
+									"pm.environment.unset(\"authorizationHeaderToken\");"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5026d28b-aa0a-439f-adb0-e745dcb1a85b",
+								"type": "text/javascript",
+								"exec": [
+									"pm.globals.set(\"userName\", \"sem.account.admin014\");",
+									"pm.globals.set(\"userPassword\", \"Password1!\");",
+									"pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+									"pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+									"let isBasicAuth = true;",
+									"",
+									"if(data.testCase !== \"registerWithExistingSerial\")",
+									"{",
+									"    if(data.isGatewaySerial)",
+									"    {",
+									"        pm.environment.set(\"gatewaySerial\", globalFunctions.makeRandomInt());",
+									"        // console.log(\"----\" + pm.variables.get(\"gatewaySerial\"));",
+									"    }",
+									"    else{",
+									"        pm.environment.set(\"gatewaySerial\", \"\");",
+									"    }",
+									"}",
+									"else{",
+									"    pm.environment.set(\"gatewaySerial\", pm.environment.get(\"successfullyAddedGateawaySerial\"));",
+									"}",
+									"",
+									"if(data.testCase === \"agentWrongCreds\"){",
+									"    if(data.userName == null){",
+									"        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+									"    }",
+									"    ",
+									"    if(data.userPassword == null){",
+									"        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+									"    }",
+									"",
+									"    if(!data.isAuth){",
+									"        isBasicAuth = false;",
+									"    }",
+									"}",
+									"",
+									"if(isBasicAuth)",
+									"{",
+									"    pm.environment.set(\"authorization\", \"Authorization\");",
+									"    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+									"}",
+									"else{",
+									"    pm.environment.set(\"authorization\", \"\");   ",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "{{mediaType}}"
+							},
+							{
+								"key": "{{authorization}}",
+								"value": "{{authorizationHeaderToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"gatewayModel\": \"{{gatewayModel}}\",\r\n  \"gatewaySerial\": \"{{gatewaySerial}}\",\r\n  \"ipAddress\": \"{{ipAddress}}\",\r\n  \"softwareVersion\": \"{{softwareVersion}}\",\r\n  \"description\": \"{{description}}\",\r\n  \"totalDevices\": {{totalDevices}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{host}}/bedagents?api-version={{apiVersion}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"bedagents"
+							],
+							"query": [
+								{
+									"key": "api-version",
+									"value": "{{apiVersion}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "UpdateProCareAgent",
+			"description": null,
+			"item": [
+				{
+					"name": "Update agent",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "102e0087-9b03-44e8-9bc2-ea0b61fd10c4",
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"agentSerialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+									"pm.environment.set(\"agentPassword\", pm.globals.get(\"agentPassword\"));",
+									"let isBasicAuth = true;",
+									"",
+									"if(data.isGatewaySerial)",
+									"{",
+									"    pm.environment.set(\"gatewaySerial\", pm.environment.get(\"agentSerialNumber\"));",
+									"}",
+									"else{",
+									"    pm.environment.set(\"gatewaySerial\", \"\");",
+									"}",
+									"",
+									"if(data.testCase === \"agentWrongCreds\"){",
+									"    if(data.generateAgentSerialNumber){",
+									"        pm.environment.set(\"agentSerialNumber\", globalFunctions.makeRandomInt());",
+									"    }",
+									"    ",
+									"    if(data.generateAgentPassword){",
+									"        pm.environment.set(\"agentPassword\", globalFunctions.makeRandomInt());",
+									"    }",
+									"",
+									"    if(!data.isAuth){",
+									"        isBasicAuth = false;",
+									"    }",
+									"}",
+									"",
+									"if(isBasicAuth)",
+									"{",
+									"    pm.environment.set(\"authorization\", \"Authorization\");",
+									"    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('agentSerialNumber'), pm.variables.get(\"agentPassword\")));",
+									"}",
+									"else{",
+									"    pm.environment.set(\"authorization\", \"\");   ",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "c9ee503d-7821-432e-8a46-9364effb5276",
+								"type": "text/javascript",
+								"exec": [
+									"if(data.testCase === \"agentFields\")",
+									"{",
+									"    pm.test(\"This agent can't be updated because of leak of required field\", function(){",
+									"        pm.response.to.have.status(400);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"agentWrongCreds\"){",
+									"    ",
+									"    pm.test(\"Do not update agent with wrong agent creds\", function(){",
+									"        pm.response.to.have.status(401);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"unsupportedTypes\"){",
+									"        pm.test(\"Agent can't be updated because of unsupported media type, status code is 415\", function(){",
+									"        pm.response.to.have.status(415);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"successUpdate\"){",
+									"    pm.test(\"Agent should be registered successfully, status code is 200\", function(){",
+									"        pm.response.to.have.status(200);",
+									"    })",
+									"}",
+									"",
+									"pm.environment.unset(\"authorization\");",
+									"pm.environment.unset(\"authorizationHeaderToken\");",
+									"pm.environment.unset(\"gatewaySerial\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "{{mediaType}}"
+							},
+							{
+								"key": "{{authorization}}",
+								"value": "{{authorizationHeaderToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"gatewayModel\": \"{{gatewayModel}}\",\r\n  \"gatewaySerial\": \"{{gatewaySerial}}\",\r\n  \"ipAddress\": \"{{ipAddress}}\",\r\n  \"softwareVersion\": \"{{softwareVersion}}\",\r\n  \"description\": \"{{description}}\",\r\n  \"totalDevices\": {{totalDevices}}\r\n}"
+						},
+						"url": {
+							"raw": "https://{{host}}/bedagents/{{agentSerialNumber}}?api-version={{apiVersion}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"bedagents",
+								"{{agentSerialNumber}}"
+							],
+							"query": [
+								{
+									"key": "api-version",
+									"value": "{{apiVersion}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "UpdateBedStatus",
+			"description": "",
+			"item": [
+				{
+					"name": "Update bed",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "bcc41066-41f2-40dc-9787-f6958e928b29",
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"agentSerialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+									"pm.environment.set(\"agentPassword\", pm.globals.get(\"agentPassword\"));",
+									"pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+									"let isBasicAuth = true;",
+									"",
+									"if(pm.info.iteration === 1)",
+									"{",
+									"    pm.environment.set(\"badSerialNumber\", globalFunctions.makeRandomInt());",
+									"}",
+									"",
+									"if(data.testCase === \"wrongBedFields\"){",
+									"    if(data.isSerialNumber)",
+									"    {",
+									"        pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+									"    }",
+									"    else{",
+									"        pm.environment.set(\"serialNumber\", \"\");",
+									"    }",
+									"}",
+									"else if(data.testCase === \"agentWrongCreds\"){",
+									"    if(data.generateAgentSerialNumber){",
+									"        pm.environment.set(\"agentSerialNumber\", globalFunctions.makeRandomInt());",
+									"    }",
+									"    ",
+									"    if(data.generateAgentPassword){",
+									"        pm.environment.set(\"agentPassword\", globalFunctions.makeRandomInt());",
+									"    }",
+									"    if(!data.isAuth){",
+									"        isBasicAuth = false;",
+									"    }",
+									"}",
+									"",
+									"if(isBasicAuth)",
+									"{",
+									"    pm.environment.set(\"authorization\", \"Authorization\");",
+									"    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('agentSerialNumber'), pm.variables.get(\"agentPassword\")));",
+									"}",
+									"else{",
+									"    pm.environment.set(\"authorization\", \"\");   ",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "e95ac9a9-81ca-4b36-8fe8-729fbe5d9d7d",
+								"type": "text/javascript",
+								"exec": [
+									"if(data.testCase === \"wrongBedFields\"){",
+									"    pm.test(\"Bed can't be updated because of leak of required field\", function(){",
+									"        pm.response.to.have.status(400);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"agentWrongCreds\"){",
+									"    ",
+									"    pm.test(\"Bed can't be updated with wrong agent creds\", function(){",
+									"        pm.response.to.have.status(401);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"unsupportedTypes\"){",
+									"    pm.test(\"Bed can't be updated because of unsupported media type, status code is 415\", function(){",
+									"        pm.response.to.have.status(415);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"successUpdate\"){",
+									"    pm.test(\"Bed should be updated successfully, status code is 200\", function(){",
+									"        pm.response.to.have.status(200);",
+									"    })",
+									"}",
+									"",
+									"pm.environment.unset(\"agentSerialNumber\");",
+									"pm.environment.unset(\"agentPassword\");",
+									"pm.environment.unset(\"authorization\");",
+									"pm.environment.unset(\"authorizationHeaderToken\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "{{mediaType}}"
+							},
+							{
+								"key": "{{authorization}}",
+								"value": "{{authorizationHeaderToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"model\": \"{{model}}\",\n\t\"serialNumber\": \"{{serialNumber}}\",\n\t\"online\": {{online}},\n\t\"connectionUptime\": {{connectionUptime}},\n\t\"ipAddress\": \"{{ipAddress}}\",\n\t\"rssi\": {{rssi}},\n\t\"location\": \"{{location}}\",\n\t\"macAddress\": \"{{macAddress}}\",\n\t\"networkAddress\": \"{{networkAddress}}\",\n\t\"softwareVersion\": \"{{softwareVersion}}\",\n\t\"activeDeviceError\": {{activeDeviceError}},\n\t\"activeDeviceErrorInformation\": \"{{activeDeviceErrorInformation}}\",\n\t\"deviceErrorLog1\": \"{{deviceErrorLog1}}\",\n\t\"deviceErrorLog2\": \"{{deviceErrorLog2}}\",\n\t\"deviceErrorLog3\": \"{{deviceErrorLog3}}\",\n\t\"deviceErrorLog4\": \"{{deviceErrorLog4}}\",\n\t\"deviceErrorLog5\": \"{{deviceErrorLog5}}\",\n\t\"deviceErrorLog6\": \"{{deviceErrorLog6}}\",\n\t\"deviceErrorLog7\": \"{{deviceErrorLog7}}\",\n\t\"deviceErrorLog8\": \"{{deviceErrorLog8}}\",\n\t\"deviceErrorLog9\": \"{{deviceErrorLog9}}\",\n\t\"deviceErrorLog10\": \"{{deviceErrorLog10}}\",\n\t\"patientPresent\": {{patientPresent}},\n\t\"bedExitAlarming\": {{bedExitAlarming}},\n\t\"bedExitArmed\": {{bedExitArmed}},\n\t\"brakeOn\": {{brakeOn}},\n\t\"flSiderailUp\": {{flSiderailUp}},\n\t\"frSiderailUp\": {{frSiderailUp}},\n\t\"hlSiderailUp\": {{hlSiderailUp}},\n\t\"hrSiderailUp\": {{hrSiderailUp}},\n\t\"lbsAlarming\": {{lbsAlarming}},\n\t\"lbsArmed\": {{lbsArmed}},\n\t\"lowBedHeight\": {{lowBedHeight}}\n}"
+						},
+						"url": {
+							"raw": "https://{{host}}/beds/{{badSerialNumber}}?api-version={{apiVersion}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"beds",
+								"{{badSerialNumber}}"
+							],
+							"query": [
+								{
+									"key": "api-version",
+									"value": "{{apiVersion}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DeleteProCareAgent",
+			"description": "",
+			"item": [
+				{
+					"name": "Delete agent",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "83ab09b2-ff00-4b93-8f8c-2dbfe192a3eb",
+								"type": "text/javascript",
+								"exec": [
+									"pm.environment.set(\"userName\", pm.globals.get(\"userName\"));",
+									"pm.environment.set(\"userPassword\", pm.globals.get(\"userPassword\"));",
+									"pm.environment.set(\"serialNumber\", pm.globals.get(\"agentSerialNumber\"));",
+									"let isBasicAuth = true;",
+									"",
+									"if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+									"    if(data.agentSerialNumberType === \"random\"){",
+									"        pm.environment.set(\"serialNumber\", globalFunctions.makeRandomInt());",
+									"    }",
+									"}",
+									"else if(data.testCase === \"userWrongCreds\"){",
+									"    if(data.userName == null){",
+									"        pm.environment.set(\"userName\", globalFunctions.makeRandomString());",
+									"    }",
+									"    ",
+									"    if(data.userPassword == null){",
+									"        pm.environment.set(\"userPassword\", globalFunctions.makeRandomInt());",
+									"    }",
+									"",
+									"    if(!data.isAuth){",
+									"        isBasicAuth = false;",
+									"    }",
+									"}",
+									"",
+									"if(isBasicAuth)",
+									"{",
+									"    pm.environment.set(\"authorization\", \"Authorization\");",
+									"    pm.environment.set(\"authorizationHeaderToken\", \"Basic \" + globalFunctions.getAuthToken(pm.variables.get('userName'), pm.variables.get(\"userPassword\")));",
+									"}",
+									"else{",
+									"    pm.environment.set(\"authorization\", \"\");   ",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "774200c2-c0b7-44e7-aaf7-82f8167843ad",
+								"type": "text/javascript",
+								"exec": [
+									"let host = pm.environment.get(\"host\");",
+									"let agentSerialNumber = pm.environment.get(\"serialNumber\");",
+									"",
+									"let getRequest = {",
+									"      url: 'https://' + pm.environment.get(\"host\") + '/bedagents/' + agentSerialNumber + '?api-version=1.0',",
+									"      method: 'GET',",
+									"      header: 'Authorization:Basic ' + pm.environment.get(\"rightAuthorization\")",
+									"};",
+									"",
+									"if(data.testCase === \"deleteAgentWithWrongSerialNumber\"){",
+									"    pm.test(\"Agent can't be deleted because of wrong serial number and status code is 400\", function(){",
+									"        pm.response.to.have.status(404);",
+									"    })",
+									"    ",
+									"    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+									"        pm.sendRequest(getRequest, function (err, response) {",
+									"            pm.expect(response.code).to.eql(404);",
+									"        });  ",
+									"    })",
+									"}",
+									"else if(data.testCase === \"userWrongCreds\"){",
+									"    ",
+									"    pm.test(\"Do not delete agent with wrong user creds\", function(){",
+									"        pm.response.to.have.status(401);",
+									"    })",
+									"    ",
+									"    pm.test(\"Agent is gotten and status code is 200\", function(){",
+									"        pm.sendRequest(getRequest, function (err, response) {",
+									"            pm.expect(response.code).to.eql(200);",
+									"        });  ",
+									"    })",
+									"}",
+									"else if(data.testCase === \"disabledAccount\"){",
+									"    pm.test(\"Agent can't be deleted because of disabled account, status code is 401\", function(){",
+									"    pm.response.to.have.status(401);",
+									"    })",
+									"}",
+									"else if(data.testCase === \"deleteAgentSuccessfully\"){",
+									"    pm.test(\"Agent should be deleted successfully, status code is 204\", function(){",
+									"        pm.response.to.have.status(204);",
+									"    })",
+									"    ",
+									"    pm.test(\"Agent isn't gotten and status code is 404\", function(){",
+									"        pm.sendRequest(getRequest, function (err, response) {",
+									"            pm.expect(response.code).to.eql(404);",
+									"        });  ",
+									"    })",
+									"}",
+									"",
+									"pm.environment.unset(\"userName\");",
+									"pm.environment.unset(\"userPassword\");",
+									"pm.environment.unset(\"serialNumber\");",
+									"pm.environment.unset(\"rightAuthorization\");",
+									"pm.environment.unset(\"authorization\");",
+									"pm.environment.unset(\"authorizationHeaderToken\");",
+									"pm.environment.unset(\"rightAuthorization\");",
+									"pm.environment.unset(\"badSerialNumber\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "{{authorization}}",
+								"value": "{{authorizationHeaderToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host}}/bedagents/{{serialNumber}}?api-version={{apiVersion}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"bedagents",
+								"{{serialNumber}}"
+							],
+							"query": [
+								{
+									"key": "api-version",
+									"value": "{{apiVersion}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b16d56fa-b16e-4ec8-8e56-2cafedc85e96",
+				"type": "text/javascript",
+				"exec": [
+					"var CryptoJS = require(\"crypto-js\");",
+					"",
+					"globalFunctions = {",
+					"    makeRandomString: function() {",
+					"      var text = \"\";",
+					"      var possible = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\";",
+					"    ",
+					"      for (var i = 0; i < 10; i++)",
+					"        text += possible.charAt(Math.floor(Math.random() * possible.length));",
+					"    ",
+					"      return text;",
+					"    },",
+					"    makeRandomInt:function() {",
+					"      var text = \"\";",
+					"      var possible = \"0123456789\";",
+					"    ",
+					"      for (var i = 0; i < 10; i++)",
+					"        text += possible.charAt(Math.floor(Math.random() * possible.length));",
+					"    ",
+					"      return text;",
+					"    },",
+					"    getAuthToken:function(userName, userPassword) {",
+					"      var rawStr = CryptoJS.enc.Utf8.parse(userName + \":\" + userPassword);",
+					"      var base64 = CryptoJS.enc.Base64.stringify(rawStr);",
+					"    ",
+					"      return base64;",
+					"    }",
+					"};",
+					"",
+					"pm.environment.set(\"rightAuthorization\", globalFunctions.getAuthToken(pm.globals.get('userName'), pm.globals.get(\"userPassword\")));"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "d78e9c9b-15f9-4f6d-acd0-7feb7a5660cf",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "b1160226-bcdf-4432-a3ed-2e7748257759",
+			"key": "apiVersion",
+			"value": "1.0",
+			"type": "string",
+			"description": ""
+		}
+	]
+}

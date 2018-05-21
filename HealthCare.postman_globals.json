@@ -1,0 +1,34 @@
+{
+  "_": {
+    "postman_variable_scope": "globals",
+    "postman_exported_at": "2018-05-21T11:59:45.256Z",
+    "postman_exported_using": "Newman/3.9.3"
+  },
+  "id": "90d847aa-a75b-406d-878f-fdf89b21222e",
+  "name": "My Workspace Globals",
+  "values": [
+    {
+      "type": "any",
+      "value": "sem.account.admin014",
+      "key": "userName"
+    },
+    {
+      "type": "any",
+      "value": "Password1!",
+      "key": "userPassword"
+    },
+    {
+      "type": "any",
+      "value": "7108632732",
+      "key": "agentSerialNumber"
+    },
+    {
+      "type": "any",
+      "value": "r0AX0Vmf7ka6ehX0u0Ijjg==",
+      "key": "agentPassword"
+    }
+  ],
+  "_postman_variable_scope": "globals",
+  "_postman_exported_at": "2018-05-21T11:59:52.429Z",
+  "_postman_exported_using": "Newman/3.9.3"
+}
